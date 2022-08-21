@@ -161,10 +161,10 @@ const Home: NextPage = () => {
                 </div>
 
                 
-                <div style={{display: 'flex', justifyContent: 'space-evenly', alignItems: 'center'}}>
+                {/* <div style={{display: 'flex', justifyContent: 'space-evenly', alignItems: 'center'}}>
                     <button onClick={create}>Create</button>
                     <button onClick={increment}>Increment</button>
-                </div>  
+                </div>   */}
 
                 <Board selected={selected} setSelected={setSelected}/>
 
