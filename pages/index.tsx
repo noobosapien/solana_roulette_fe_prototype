@@ -25,15 +25,15 @@ const Home: NextPage = () => {
 
     useEffect(() => {
       
-        async function getBalanceOfAcc(func){
+        async function getBalanceOfAcc(){
             let provider = getProvider();
 
-            let b = await provider?.connection?.getBalance(wallet?.publicKey);
+            let b = wallet ? await provider?.connection?.getBalance(wallet.publicKey) : undefined;
     
-            b?func((b / LAMPORTS_PER_SOL).toString()):undefined
+            b?setBalance((b / LAMPORTS_PER_SOL).toString()):undefined;
         }
         
-        getBalanceOfAcc(setBalance);
+        getBalanceOfAcc();
       
     }, [wallet])
     
