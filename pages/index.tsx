@@ -5,8 +5,8 @@ import Image from 'next/image';
 import styles from '../styles/Home.module.css';
 import idl from '../public/idl.json'
 import { AnchorWallet, useAnchorWallet } from '@solana/wallet-adapter-react';
-import {Connection, LAMPORTS_PER_SOL} from '@solana/web3.js';
-import { Program,AnchorProvider, web3, BN } from '@project-serum/anchor';
+import {Connection, LAMPORTS_PER_SOL, Keypair, Transaction} from '@solana/web3.js';
+import { Program, AnchorProvider, web3, BN } from '@project-serum/anchor';
 import { useMemo, useState, useEffect } from 'react';
 import Board from '../components/Board';
 require('@solana/wallet-adapter-react-ui/styles.css');
@@ -23,6 +23,14 @@ const Home: NextPage = () => {
     const [showError, setShowError] = useState(false);
     const baseAccount = useMemo(()=> web3.Keypair.generate(), []);
 
+    function tellIframe(){
+        const frame: any = document.getElementById('if');
+        
+        if(wallet){
+            frame?.contentWindow?.postMessage("connected", 'http://localhost:3000');
+        }
+    }
+
     useEffect(() => {
       
         async function getBalanceOfAcc(){
@@ -31,11 +39,35 @@ const Home: NextPage = () => {
             let b = wallet ? await provider?.connection?.getBalance(wallet.publicKey) : undefined;
     
             b?setBalance((b / LAMPORTS_PER_SOL).toString()):undefined;
+
+
         }
+
+        window.addEventListener('message', (event) => {
+
+        // if (event.origin.startsWith('http://localhost:3000')){
+        if (true){
+            console.log(event.data)
+            switch(event.data){
+                case 'NO_CONNECT':
+                    console.log("Please connect your wallet from top.")
+            }
+
+            tellIframe();
+        }else{
+            return;
+        }
+        });
         
         getBalanceOfAcc();
       
-    }, [wallet])
+    }, [wallet]);
+
+    useEffect(() => {
+        
+        
+    }, [])
+    
     
 
 
@@ -54,35 +86,35 @@ const Home: NextPage = () => {
         return provider;
     }
 
-    async function create(){
-        const provider = getProvider();
+    // async function create(){
+    //     const provider = getProvider();
 
-        if(!provider){
-            throw new Error("Provider is null");
-        }
+    //     if(!provider){
+    //         throw new Error("Provider is null");
+    //     }
 
-        const a = JSON.stringify(idl);
-        const b = JSON.parse(a);
-        const program = new Program(b, "BVHVoAxVyGbcoQL3A3ZWNLRfYGhz8tyN2hELvvqdXwwE", provider);
+    //     const a = JSON.stringify(idl);
+    //     const b = JSON.parse(a);
+    //     const program = new Program(b, "H3YnefvQ8naoi7SRuqti9HJZWooafQQi9cGoYZC2G5Mw", provider);
 
-        try{
-            await program.rpc.create({
-                accounts: {
-                    baseAccount: baseAccount.publicKey,
-                    user: provider.wallet.publicKey,
-                    systemProgram: web3.SystemProgram.programId
-                },
-                signers: [baseAccount]
-            });
+    //     try{
+            // await program.rpc.create({
+            //     accounts: {
+            //         baseAccount: baseAccount.publicKey,
+            //         user: provider.wallet.publicKey,
+            //         systemProgram: web3.SystemProgram.programId
+            //     },
+            //     signers: [baseAccount]
+            // });
 
-            const account = await program.account.baseAccount.fetch(baseAccount.publicKey);
-            console.log("Account : ", account);
-            setCount(account.count.toString());
-        }catch(e){
-            console.log("Transaction Error: ", e);
-        }
+    //         const account = await program.account.baseAccount.fetch(baseAccount.publicKey);
+    //         console.log("Account : ", account);
+    //         setCount(account.count.toString());
+    //     }catch(e){
+    //         console.log("Transaction Error: ", e);
+    //     }
         
-    }
+    // }
 
     async function increment(){
         const provider = getProvider();
@@ -103,8 +135,45 @@ const Home: NextPage = () => {
             });
 
             const account = await program.account.baseAccount.fetch(baseAccount.publicKey);
-            console.log("Account count: ", account.count.toString());
-            setCount(account.count.toString());
+            // console.log("Account count: ", account.count.toString());
+            // setCount(account.count.toString());
+        }catch(e){
+            console.log("Transaction Error: ", e);
+        }
+        
+    }
+
+    async function initialize(){
+        const provider = getProvider();
+
+        if(!provider){
+            throw new Error("Provider is null");
+        }
+
+        const a = JSON.stringify(idl);
+        const b = JSON.parse(a);
+        const program = new Program(b, "BVHVoAxVyGbcoQL3A3ZWNLRfYGhz8tyN2hELvvqdXwwE", provider);
+
+        try{
+            
+
+            await program.rpc.create({
+                accounts: {
+
+                }
+            })
+
+            // await program.rpc.create({
+            //     accounts: {
+            //         baseAccount: baseAccount.publicKey,
+            //         user: provider.wallet.publicKey,
+            //         systemProgram: web3.SystemProgram.programId
+            //     },
+            //     signers: [baseAccount]
+            // });
+
+            const account = await program.account.baseAccount.fetch(baseAccount.publicKey);
+            console.log("Account : ", account);
         }catch(e){
             console.log("Transaction Error: ", e);
         }
@@ -144,6 +213,10 @@ const Home: NextPage = () => {
         setBetAmount(e.target.value);
     }
 
+    const sendTx = () => {
+
+    }
+
     return (
         <div className='bg-slate-800'>
             <Head>
@@ -153,6 +226,8 @@ const Home: NextPage = () => {
             </Head>
 
             <main className={styles.main}>
+
+            
                 
 
                 <div className={styles.walletButtons}>
@@ -185,6 +260,10 @@ const Home: NextPage = () => {
                     </div>
                 </> : <></>
                 }
+
+                <button onClick={()=>initialize()} className="disabled:bg-slate-50 disabled:text-slate-500 
+                    bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded basis-1/2">
+                        Initialize</button>
                 
                 
                 <form className="mt-10 flex flex-row justify-evenly space-x-8" onSubmit={submitBet}>
@@ -203,6 +282,8 @@ const Home: NextPage = () => {
                     </button>
                 </form>
 
+                
+
                 {
                     showError ? betError : <></>
                 }
@@ -220,8 +301,16 @@ const Home: NextPage = () => {
                         Claim
                     </button>
                 </form>
+
+                <iframe src="http://localhost:3000/" id="if" title="game" style={{
+                width: '60vh',
+                height: '60vh',
+                marginTop: '3rem'
+                }}/>
                 
             </main>
+
+            
         </div>
     );
 };
