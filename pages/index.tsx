@@ -27,7 +27,7 @@ const Home: NextPage = () => {
         const frame: any = document.getElementById('if');
         
         if(wallet){
-            frame?.contentWindow?.postMessage("connected", 'http://localhost:3000');
+            frame?.contentWindow?.postMessage("connected", '*');
         }
     }
 
@@ -302,7 +302,8 @@ const Home: NextPage = () => {
                     </button>
                 </form>
 
-                <iframe src="http://3.104.94.74:3000/" id="if" title="game" style={{
+                {/* <iframe src="http://localhost:3000/" id="if" title="game" style={{ */}
+                <iframe src="https://wondersplot.com/" id="if" title="game" style={{
                 width: '60vh',
                 height: '60vh',
                 marginTop: '3rem'
