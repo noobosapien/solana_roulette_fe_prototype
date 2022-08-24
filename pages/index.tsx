@@ -302,7 +302,7 @@ const Home: NextPage = () => {
                     </button>
                 </form>
 
-                <iframe src="http://localhost:3000/" id="if" title="game" style={{
+                <iframe src="http://3.104.94.74:3000/" id="if" title="game" style={{
                 width: '60vh',
                 height: '60vh',
                 marginTop: '3rem'
