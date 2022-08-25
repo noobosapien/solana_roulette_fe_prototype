@@ -42,7 +42,7 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "count",
+            "name": "wager",
             "type": "u64"
           }
         ]
