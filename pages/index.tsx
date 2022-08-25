@@ -25,12 +25,12 @@ const Home: NextPage = () => {
   const [balance, setBalance] = useState('0');
   const [betAmount, setBetAmount] = useState('0');
   const [winnings, setWinnings] = useState('0');
-  const [winningBet, setWinningBet] = useState(12);
+  const [winningBet, setWinningBet] = useState(1);
   const [selected, setSelected] = useState(-1);
   const [showError, setShowError] = useState(false);
   const baseAccount = useMemo(() => web3.Keypair.generate(), []);
 
-  function tellIframe(call: String) {
+  function tellIframe(call: String, ...args: string[]) {
     const frame: any = document.getElementById('if');
 
     switch (call) {
@@ -66,6 +66,8 @@ const Home: NextPage = () => {
             '*'
           );
         }
+
+        break;
       }
 
       case 'SEND_BALANCE': {
@@ -76,6 +78,20 @@ const Home: NextPage = () => {
           },
           '*'
         );
+
+        break;
+      }
+
+      case 'RECV_WINNING_BET': {
+        frame?.contentWindow?.postMessage(
+          {
+            name: 'SET_WINNING_TILE',
+            value: args[0]
+          },
+          '*'
+        );
+
+        break;
       }
 
       default:
@@ -106,19 +122,22 @@ const Home: NextPage = () => {
   }, [balance]);
 
   useEffect(() => {
-    window.addEventListener('message', (event) => {
-      switch (event.data?.name) {
-        case 'INITIALIZE':
-          create();
-          break;
+    window.removeEventListener('message', fromIframe);
+    window.addEventListener('message', fromIframe);
+  }, [wallet]);
 
-        case 'BET': {
-          console.log(event.data);
-          break;
-        }
+  function fromIframe(event: any) {
+    switch (event.data?.name) {
+      case 'INITIALIZE':
+        create();
+        break;
+
+      case 'BET': {
+        increment();
+        break;
       }
-    });
-  }, []);
+    }
+  }
 
   function getProvider() {
     if (!wallet) {
@@ -138,8 +157,10 @@ const Home: NextPage = () => {
   async function create() {
     const provider = getProvider();
 
+    console.log('provider', provider);
+
     if (!provider) {
-      throw new Error('Provider is null');
+      return console.log('Provider is null');
     }
 
     const a = JSON.stringify(idl);
@@ -173,7 +194,7 @@ const Home: NextPage = () => {
     const provider = getProvider();
 
     if (!provider) {
-      throw new Error('Provider is null');
+      return console.log('Provider is null');
     }
 
     const a = JSON.stringify(idl);
@@ -195,6 +216,8 @@ const Home: NextPage = () => {
         baseAccount.publicKey
       );
       console.log('Account count: ', account.wager.toString());
+      setWinningBet(Number(account?.wager.toString()));
+      tellIframe('RECV_WINNING_BET', account?.wager.toString());
       // setCount(account.count.toString());
     } catch (e) {
       console.log('Transaction Error: ', e);
@@ -385,9 +408,13 @@ const Home: NextPage = () => {
           </button>
         </form>
 
-        {/* <iframe src="https://wondersplot.com/" id="if" title="game" style={{ */}
-        <iframe
+        {/* <iframe
           src="http://localhost:3000/"
+          id="if"
+          title="game"
+          style={{ */}
+        <iframe
+          src="https://wondersplot.com/"
           id="if"
           title="game"
           style={{
